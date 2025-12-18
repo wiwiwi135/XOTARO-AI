@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>XOTA AI PRO MAX | XOTARO Studios</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&family=Orbitron:wght@500;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/tokyo-night-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+
+    <style>
+        :root { --neon: #bc13fe; --cyan: #00f3ff; --bg: #050505; }
+        * { box-sizing: border-box; font-family: 'Cairo', sans-serif; -webkit-tap-highlight-color: transparent; }
+        
+        body { 
+            background-color: var(--bg); 
+            color: #fff; 
+            margin: 0; 
+            height: 100vh; 
+            display: flex; 
+            flex-direction: column; 
+            overflow: hidden; 
+            position: relative;
+        }
+
+        /* --- تعديل العلامة المائية (كبيرة وظاهرة) --- */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;  /* حجم كبير جداً */
+            height: 80%;
+            background-image: url('https://i.ibb.co/zVYqqrcV/IMG.png');
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: contain; 
+            opacity: 0.2; /* وضوح أعلى (كان 0.08) */
+            z-index: -1;
+            pointer-events: none;
+            filter: grayscale(1%) brightness(1.2); /* تأثير لوني خفيف */
+        }
+
+        /* --- الهيدر --- */
+        header {
+            height: 60px;
+            background: rgba(0,0,0,0.95);
+            border-bottom: 1px solid #222;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 15px; z-index: 50;
+        }
+        .brand-logo { font-family: 'Orbitron'; color: var(--cyan); font-weight: 900; letter-spacing: 2px; font-size: 16px; }
+
+        /* --- الشات --- */
+        #chat-flow { 
+            flex: 1; overflow-y: auto; padding: 20px; 
+            display: flex; flex-direction: column; gap: 20px; 
+        }
+
+        .bubble { 
+            max-width: 85%; padding: 15px; border-radius: 15px; 
+            line-height: 1.6; position: relative; font-size: 14px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+        .ai-msg { background: rgba(30, 30, 30, 0.9); border-right: 3px solid var(--neon); align-self: flex-end; }
+        .user-msg { background: #000; border: 1px solid #333; border-left: 3px solid var(--cyan); align-self: flex-start; }
+
+        /* --- شريط الإدخال الجديد --- */
+        .input-area {
+            background: #000;
+            padding: 10px;
+            display: flex; gap: 8px; align-items: center;
+            border-top: 1px solid #222;
+        }
+        
+        #user-input {
+            flex: 1; background: #111; border: 1px solid #333;
+            padding: 12px; border-radius: 8px; color: #fff; outline: none;
+        }
+        
+        /* زر الإرسال */
+        .send-btn {
+            background: var(--cyan); color: #000;
+            width: 45px; height: 45px; border-radius: 8px; border: none;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            font-size: 18px;
+        }
+
+        /* زر محادثة جديدة (الإضافة الجديدة) */
+        .new-chat-btn {
+            background: var(--neon); color: #fff;
+            width: 45px; height: 45px; border-radius: 8px; border: none;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            font-size: 18px; transition: 0.3s;
+        }
+        .new-chat-btn:hover { box-shadow: 0 0 10px var(--neon); }
+
+        /* --- الفوتر --- */
+        footer {
+            height: 80px; width: 100%; position: relative; background: #000;
+            border-top: 1px solid #222; overflow: hidden;
+        }
+        .footer-bg {
+            position: absolute; inset: 0;
+            background-image: url('xoo.png'); background-size: cover; background-position: center;
+            opacity: 0.4;
+        }
+        .footer-text {
+            position: relative; z-index: 2; height: 100%; display: flex; 
+            align-items: center; justify-content: center; font-family: 'Orbitron'; 
+            font-size: 10px; letter-spacing: 3px;
+        }
+
+        /* --- القوائم والأدوات --- */
+        .msg-tools { margin-top: 8px; padding-top: 5px; border-top: 1px solid #333; display: flex; gap: 10px; color: #888; font-size: 12px; }
+        .tool-btn { cursor: pointer; } .tool-btn:hover { color: #fff; }
+        
+        pre { background: #080808; padding: 10px; border-radius: 5px; overflow-x: auto; border: 1px solid #333; }
+        
+        /* إخفاء القائمة الجانبية افتراضياً */
+        #settings-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1000; align-items: center; justify-content: center; }
+        .modal-box { background: #111; padding: 20px; border-radius: 10px; border: 1px solid var(--neon); width: 90%; max-width: 350px; }
+    </style>
+</head>
+<body>
+
+    <div id="settings-modal">
+        <div class="modal-box animate__animated animate__fadeInUp">
+            <h3 style="color: var(--cyan); text-align: center;">إعدادات XOTARO</h3>
+            <input type="text" id="config-name" placeholder="اسمك" style="width:100%; padding:10px; background:#000; border:1px solid #333; color:#fff; margin-bottom:10px;">
+            <select id="config-persona" style="width:100%; padding:10px; background:#000; border:1px solid #333; color:#fff; margin-bottom:10px;">
+                <option value="General">مساعد عام</option>
+                <option value="Developer">💻 خبير برمجة</option>
+                <option value="Hacker">🛡️ خبير أمن سيبراني</option>
+            </select>
+            <div id="archive-list" style="height:100px; overflow-y:auto; background:#000; border:1px solid #333; padding:5px; font-size:12px; color:#888;"></div>
+            <button onclick="toggleSettings()" style="width:100%; padding:10px; background:var(--neon); border:none; color:#fff; margin-top:10px; cursor:pointer;">حفظ</button>
+        </div>
+    </div>
+
+    <header>
+        <i class="fas fa-bars" style="color:#fff; cursor:pointer;" onclick="toggleSettings()"></i>
+        <div class="brand-logo">XOTA AI PRO</div>
+        <i class="fas fa-terminal" style="color:var(--neon); cursor:pointer;" onclick="window.open('https://onecompiler.com/')"></i>
+    </header>
+
+    <div id="chat-flow"></div>
+
+    <div class="input-area">
+        <button class="new-chat-btn" onclick="newSession()" title="محادثة جديدة">
+            <i class="fas fa-plus"></i>
+        </button>
+        <input type="text" id="user-input" placeholder="اكتب أمرك..." onkeypress="if(event.key==='Enter') sendMessage()">
+        <button class="send-btn" onclick="sendMessage()">
+            <i class="fas fa-paper-plane"></i>
+        </button>
+    </div>
+
+    <footer>
+        <div class="footer-bg"></div>
+        <div class="footer-text">POWERED BY XOTARO STUDIOS</div>
+    </footer>
+
+<script>
+    let chatHistory = [];
+    const chatContainer = document.getElementById('chat-flow');
+    const inputField = document.getElementById('user-input');
+
+    window.onload = function() {
+        const config = JSON.parse(localStorage.getItem('xota_config') || '{}');
+        if(config.name) document.getElementById('config-name').value = config.name;
+        loadArchives();
+        addMessage('ai', 'نظام XOTA AI جاهز للعمل. ابدأ بسؤالك البرمجي.');
+    };
+
+    async function sendMessage() {
+        const text = inputField.value.trim();
+        if (!text) return;
+
+        addMessage('user', text);
+        inputField.value = '';
+        chatHistory.push({ role: 'user', content: text });
+
+        const name = document.getElementById('config-name').value || 'User';
+        const persona = document.getElementById('config-persona').value || 'Developer';
+
+        try {
+            const response = await fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: text, user: name, persona: persona })
+            });
+            const data = await response.json();
+            if (data.reply) {
+                addMessage('ai', data.reply);
+                chatHistory.push({ role: 'ai', content: data.reply });
+            }
+        } catch (error) {
+            addMessage('ai', 'خطأ في الاتصال بالخادم.');
+        }
+    }
+
+    function addMessage(role, text) {
+        const div = document.createElement('div');
+        div.className = `bubble ${role === 'user' ? 'user-msg' : 'ai-msg'} animate__animated animate__fadeIn`;
+        if (role === 'ai') {
+            div.innerHTML = marked.parse(text) + `
+                <div class="msg-tools">
+                    <i class="fas fa-copy tool-btn" onclick="copyText(this)"></i>
+                    <i class="fas fa-share-alt tool-btn" onclick="shareText(this)"></i>
+                </div>`;
+            div.querySelectorAll('pre code').forEach(el => hljs.highlightElement(el));
+        } else { div.innerText = text; }
+        chatContainer.appendChild(div);
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+
+    function newSession() {
+        if (chatHistory.length > 0) {
+            const archives = JSON.parse(localStorage.getItem('xota_archives') || '[]');
+            archives.push({ id: Date.now(), date: new Date().toLocaleTimeString(), preview: chatHistory[0].content.substring(0, 15) });
+            localStorage.setItem('xota_archives', JSON.stringify(archives));
+            Swal.fire({ icon: 'success', title: 'تم الحفظ', toast: true, position: 'top', showConfirmButton: false, timer: 1500 });
+        }
+        chatContainer.innerHTML = '';
+        chatHistory = [];
+        loadArchives();
+        addMessage('ai', 'جلسة جديدة.');
+    }
+
+    function toggleSettings() {
+        const m = document.getElementById('settings-modal');
+        m.style.display = m.style.display === 'flex' ? 'none' : 'flex';
+        localStorage.setItem('xota_config', JSON.stringify({ name: document.getElementById('config-name').value }));
+    }
+
+    function loadArchives() {
+        const list = document.getElementById('archive-list');
+        const archives = JSON.parse(localStorage.getItem('xota_archives') || '[]');
+        list.innerHTML = archives.map(a => `<div style="border-bottom:1px solid #333; padding:5px;">📂 ${a.date}</div>`).join('');
+    }
+
+    function copyText(btn) { navigator.clipboard.writeText(btn.closest('.bubble').innerText); }
+    function shareText(btn) { if(navigator.share) navigator.share({text: btn.closest('.bubble').innerText}); }
+</script>
+</body>
+      </html>
+  
